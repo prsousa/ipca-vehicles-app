@@ -4,12 +4,15 @@ import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 
 @Injectable()
 export class VehiclesService {
+  vehicles = {}; // simmulates a DB
+  autoIncrement: number = 0; // simmulates a DB
+
   create(createVehicleDto: CreateVehicleDto) {
     return 'This action adds a new vehicle';
   }
 
   findAll() {
-    return `This action returns all vehicles`;
+    return Object.values(this.vehicles);
   }
 
   findOne(id: number) {
