@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
+import { Vehicle } from './entities/vehicle.entity';
 
 @Injectable()
 export class VehiclesService {
-  vehicles = {}; // simmulates a DB
+  vehicles: { [index: number]: Vehicle } = {}; // simmulates a DB
   autoIncrement: number = 0; // simmulates a DB
 
-  create(createVehicleDto: CreateVehicleDto) {
+  create(createVehicleDto: CreateVehicleDto): Vehicle {
     this.autoIncrement++;
     this.vehicles[this.autoIncrement] = {
       id: this.autoIncrement,
