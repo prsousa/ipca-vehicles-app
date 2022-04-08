@@ -25,7 +25,14 @@ export class PositionsService {
     return position;
   }
 
-  findAll() {
-    return `This action returns all positions`;
+  findAll(vehicle: Vehicle, page: number, perPage: number) {
+    const vehiclePositions = Object.values(this.positions).filter(
+      (position) => position.vehicleId === vehicle.id,
+    );
+
+    return {
+      results: vehiclePositions.slice((page - 1) * perPage, page * perPage),
+      count: vehiclePositions.length,
+    };
   }
 }
