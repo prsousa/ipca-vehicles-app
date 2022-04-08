@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Position } from 'src/positions/entities/position.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { Vehicle } from './entities/vehicle.entity';
@@ -13,6 +14,7 @@ export class VehiclesService {
     this.vehicles[this.autoIncrement] = {
       id: this.autoIncrement,
       ...createVehicleDto,
+      lastPosition: null,
     };
 
     return this.vehicles[this.autoIncrement];
@@ -23,11 +25,15 @@ export class VehiclesService {
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} vehicle`;
+    return this.vehicles[id];
   }
 
   update(id: number, updateVehicleDto: UpdateVehicleDto) {
     return `This action updates a #${id} vehicle`;
+  }
+
+  setLastPosition(id: number, position: Position) {
+    this.vehicles[id].lastPosition = position;
   }
 
   remove(id: number) {

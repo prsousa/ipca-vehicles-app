@@ -1,3 +1,5 @@
+import { Position } from 'src/positions/entities/position.entity';
+
 export class Vehicle {
   id: number;
   brand: string;
@@ -5,4 +7,5 @@ export class Vehicle {
   plate: string;
   maxAutonomyKilometres: number;
   color: string;
+  lastPosition?: Position;
 }
