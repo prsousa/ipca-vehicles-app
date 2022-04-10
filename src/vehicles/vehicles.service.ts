@@ -1,23 +1,26 @@
 import { Injectable } from '@nestjs/common';
-import { Position } from 'src/positions/entities/position.entity';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
+import { Position } from 'src/positions/entities/position.entity';
 import { Vehicle } from './entities/vehicle.entity';
+import { Vehicle as VehicleSchema } from './schemas/vehicle.schema';
 
 @Injectable()
 export class VehiclesService {
   vehicles: { [index: number]: Vehicle } = {}; // simmulates a DB
   autoIncrement: number = 0; // simmulates a DB
 
-  create(createVehicleDto: CreateVehicleDto): Vehicle {
-    this.autoIncrement++;
-    this.vehicles[this.autoIncrement] = {
-      id: this.autoIncrement,
-      ...createVehicleDto,
-      lastPosition: null,
-    };
+  constructor(
+    @InjectModel(Vehicle.name)
+    private vehicleModel: Model<VehicleSchema>,
+  ) {}
 
-    return this.vehicles[this.autoIncrement];
+  async create(createVehicleDto: CreateVehicleDto): Promise<VehicleSchema> {
+    const createdVehicle = new this.vehicleModel(createVehicleDto);
+    return createdVehicle.save();
   }
 
   findAll() {
