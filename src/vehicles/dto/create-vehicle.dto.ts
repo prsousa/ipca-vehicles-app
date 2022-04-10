@@ -4,9 +4,6 @@ export class CreateVehicleDto {
   @Length(1, 20)
   brand: string;
 
-  @Length(1, 20)
-  model: string;
-
   @Matches(/^[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}$/i)
   plate: string;
 
