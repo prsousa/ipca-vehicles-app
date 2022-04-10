@@ -1,38 +1,46 @@
 import { Injectable } from '@nestjs/common';
-import { Vehicle } from 'src/vehicles/entities/vehicle.entity';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+import { Vehicle } from 'src/vehicles/schemas/vehicle.schema';
 import { VehiclesService } from 'src/vehicles/vehicles.service';
 import { CreatePositionDto } from './dto/create-position.dto';
-import { Position } from './entities/position.entity';
+import { Position } from './schemas/position.schema';
 
 @Injectable()
 export class PositionsService {
-  positions: { [index: number]: Position } = {}; // simmulates a DB
-  autoIncrement: number = 0; // simmulates a DB
+  constructor(
+    @InjectModel(Position.name)
+    private positionModel: Model<Position>,
+    private readonly vehiclesService: VehiclesService,
+  ) {}
 
-  constructor(private readonly vehiclesService: VehiclesService) {}
+  async create(vehicle: Vehicle, createPositionDto: CreatePositionDto) {
+    const position: Position = await this.positionModel.create({
+      vehicle,
+      location: {
+        type: 'Point',
+        coordinates: [createPositionDto.longitude, createPositionDto.latitude],
+      },
+    });
 
-  create(vehicle: Vehicle, createPositionDto: CreatePositionDto) {
-    const position: Position = {
-      id: ++this.autoIncrement,
-      vehicleId: vehicle.id,
-      ...createPositionDto,
-      createdAt: new Date(),
-    };
-
-    this.positions[position.id] = position;
-    this.vehiclesService.setLastPosition(vehicle.id, position);
+    await position.save();
+    await this.vehiclesService.setLastPosition(vehicle.id, position);
 
     return position;
   }
 
-  findAll(vehicle: Vehicle, page: number, perPage: number) {
-    const vehiclePositions = Object.values(this.positions).filter(
-      (position) => position.vehicleId === vehicle.id,
-    );
+  async findAll(vehicle: Vehicle, page: number, perPage: number) {
+    const query = this.positionModel.find({ vehicle: vehicle._id });
+    const results = await query
+      .clone()
+      .sort({ _id: 1 })
+      .skip((page - 1) * perPage)
+      .limit(perPage);
+    const count = await query.clone().count();
 
     return {
-      results: vehiclePositions.slice((page - 1) * perPage, page * perPage),
-      count: vehiclePositions.length,
+      results,
+      count,
     };
   }
 }

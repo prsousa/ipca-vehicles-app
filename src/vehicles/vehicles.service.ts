@@ -4,39 +4,69 @@ import { InjectModel } from '@nestjs/mongoose';
 
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
-import { Position } from 'src/positions/entities/position.entity';
-import { Vehicle } from './entities/vehicle.entity';
-import { Vehicle as VehicleSchema } from './schemas/vehicle.schema';
+import { Vehicle } from './schemas/vehicle.schema';
+import { Position } from 'src/positions/schemas/position.schema';
 
 @Injectable()
 export class VehiclesService {
-  vehicles: { [index: number]: Vehicle } = {}; // simmulates a DB
-  autoIncrement: number = 0; // simmulates a DB
-
   constructor(
     @InjectModel(Vehicle.name)
-    private vehicleModel: Model<VehicleSchema>,
+    private vehicleModel: Model<Vehicle>,
   ) {}
 
-  async create(createVehicleDto: CreateVehicleDto): Promise<VehicleSchema> {
+  async create(createVehicleDto: CreateVehicleDto): Promise<Vehicle> {
     const createdVehicle = new this.vehicleModel(createVehicleDto);
     return createdVehicle.save();
   }
 
-  findAll() {
-    return Object.values(this.vehicles);
+  async findAll(
+    page: number,
+    perPage: number,
+    latitude?: number,
+    longitude?: number,
+    maxDistance?: number,
+  ) {
+    let findParams = {};
+    if (!!latitude && !!longitude && !!maxDistance) {
+      findParams = {
+        'lastPosition.location': {
+          $near: {
+            $geometry: {
+              type: 'Point',
+              coordinates: [longitude, latitude],
+            },
+            $maxDistance: maxDistance,
+          },
+        },
+      };
+    }
+
+    const query = this.vehicleModel.find(findParams);
+
+    const results = await query
+      .clone()
+      .skip((page - 1) * perPage)
+      .limit(perPage);
+
+    return {
+      results,
+      // TODO: lacks count
+    };
   }
 
-  findOne(id: number) {
-    return this.vehicles[id];
+  async findOne(id: string): Promise<Vehicle> {
+    return this.vehicleModel.findById(id);
   }
 
   update(id: number, updateVehicleDto: UpdateVehicleDto) {
     return `This action updates a #${id} vehicle`;
   }
 
-  setLastPosition(id: number, position: Position) {
-    this.vehicles[id].lastPosition = position;
+  setLastPosition(id: string, position: Position) {
+    return this.vehicleModel.updateOne(
+      { _id: id },
+      { $set: { lastPosition: position } },
+    );
   }
 
   remove(id: number) {
